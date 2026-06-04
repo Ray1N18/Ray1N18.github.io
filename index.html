@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOIDLAB — Digital Experience Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;background:#050508}
+body{background:#050508;color:#fff;font-family:'DM Sans',sans-serif;overflow-x:hidden;cursor:none}
+canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:8;pointer-events:none}
+#about .about-grid>div:first-child{position:relative;z-index:10}
+#cursor{position:fixed;width:12px;height:12px;background:#fff;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .1s,width .2s,height .2s,background .2s;mix-blend-mode:difference}
+#cursor-ring{position:fixed;width:40px;height:40px;border:1px solid rgba(255,255,255,.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform .08s,width .3s,height .3s,border-color .3s}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:2rem 3rem;display:flex;justify-content:space-between;align-items:center;mix-blend-mode:normal}
+.nav-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:.2em;text-transform:uppercase;color:#fff;opacity:.9}
+.nav-menu{display:flex;gap:2.5rem;list-style:none}
+.nav-menu a{font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.5);text-decoration:none;transition:color .3s}
+.nav-menu a:hover{color:#fff}
+.nav-cta{font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.2);padding:.5rem 1.2rem;border-radius:2rem;text-decoration:none;transition:all .3s;backdrop-filter:blur(10px)}
+.nav-cta:hover{color:#fff;border-color:rgba(255,255,255,.6);background:rgba(255,255,255,.05)}
+section{position:relative;z-index:10}
+#about{z-index:auto!important;position:relative}
+#hero{height:100vh;display:flex;align-items:center;padding:0 3rem;pointer-events:none}
+.hero-content{max-width:700px;pointer-events:all}
+.hero-eyebrow{font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:1.5rem;opacity:0;transform:translateY(20px);transition:all .8s ease .3s}
+.hero-eyebrow.visible{opacity:1;transform:translateY(0)}
+.hero-title{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(3.5rem,8vw,7rem);line-height:.93;text-transform:uppercase;letter-spacing:-.02em;overflow:hidden}
+.hero-title span{display:block;transform:translateY(100%);opacity:0;transition:transform .9s cubic-bezier(.16,1,.3,1),opacity .9s ease}
+.hero-title span.visible{transform:translateY(0);opacity:1}
+.hero-title span:nth-child(2){transition-delay:.12s}
+.hero-title span:nth-child(3){transition-delay:.22s}
+.hero-sub{font-size:1rem;line-height:1.7;color:rgba(255,255,255,.45);max-width:420px;margin-top:1.8rem;opacity:0;transform:translateY(20px);transition:all .8s ease .7s}
+.hero-sub.visible{opacity:1;transform:translateY(0)}
+.hero-btn{display:inline-flex;align-items:center;gap:.7rem;margin-top:2.5rem;font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:#fff;border:1px solid rgba(255,255,255,.25);padding:.8rem 2rem;border-radius:3rem;text-decoration:none;opacity:0;transform:translateY(20px);transition:opacity .8s ease 1s,transform .8s ease 1s,border-color .3s,background .3s;cursor:none}
+.hero-btn.visible{opacity:1;transform:translateY(0)}
+.hero-btn:hover{border-color:rgba(255,255,255,.7);background:rgba(255,255,255,.05)}
+.hero-btn .arrow{width:16px;height:16px;border-top:1px solid #fff;border-right:1px solid #fff;transform:rotate(45deg);transition:transform .3s}
+.hero-btn:hover .arrow{transform:rotate(45deg) translate(3px,-3px)}
+.hero-scroll{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.8rem;opacity:.4}
+.hero-scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,transparent,#fff);animation:scrollLine 2s ease infinite}
+@keyframes scrollLine{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+.hero-scroll-label{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;writing-mode:vertical-rl;color:rgba(255,255,255,.5)}
+#about{min-height:100vh;display:flex;align-items:center;padding:8rem 3rem}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;max-width:1200px;margin:0 auto;width:100%}
+.about-label{font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:1.5rem}
+.about-title{font-family:'Syne',sans-serif;font-weight:700;font-size:clamp(2rem,4vw,3.5rem);line-height:1.1;letter-spacing:-.02em}
+.about-text{font-size:.95rem;line-height:1.8;color:rgba(255,255,255,.45);margin-top:1.5rem}
+.about-stats{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:3rem}
+.stat-num{font-family:'Syne',sans-serif;font-weight:800;font-size:3rem;line-height:1;background:linear-gradient(135deg,#fff 40%,rgba(255,255,255,.3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:.4rem}
+.about-visual{position:relative;height:450px;border:1px solid rgba(255,255,255,.06);border-radius:4px;overflow:hidden;background:rgba(255,255,255,.01);z-index:7}
+#services{padding:8rem 3rem;min-height:100vh}
+.section-header{max-width:1200px;margin:0 auto 5rem;display:flex;justify-content:space-between;align-items:flex-end}
+.section-label{font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3)}
+.section-title{font-family:'Syne',sans-serif;font-weight:700;font-size:clamp(2rem,4vw,3rem);line-height:1.1;letter-spacing:-.02em}
+.section-counter{font-family:'Syne',sans-serif;font-size:5rem;font-weight:800;color:rgba(255,255,255,.04);line-height:1}
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;max-width:1200px;margin:0 auto;background:rgba(255,255,255,.06)}
+.service-card{background:#050508;padding:2.5rem;position:relative;overflow:hidden;transition:background .4s;cursor:none}
+.service-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(100,150,255,.08) 0%,transparent 60%);opacity:0;transition:opacity .4s}
+.service-card:hover{background:#0a0a12}
+.service-card:hover::before{opacity:1}
+.service-num{font-family:'Syne',sans-serif;font-size:.7rem;letter-spacing:.2em;color:rgba(255,255,255,.2);margin-bottom:3rem}
+.service-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1.4rem;margin-bottom:1rem}
+.service-desc{font-size:.85rem;line-height:1.7;color:rgba(255,255,255,.4)}
+.service-arrow{position:absolute;bottom:2.5rem;right:2.5rem;width:32px;height:32px;border:1px solid rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.service-card:hover .service-arrow{border-color:rgba(255,255,255,.5);transform:rotate(45deg)}
+.service-arrow svg{width:12px;height:12px;stroke:#fff;fill:none}
+#showcase{padding:8rem 0;overflow:hidden}
+.showcase-header{padding:0 3rem;max-width:1200px;margin:0 auto 4rem}
+.showcase-items{display:flex;gap:1.5rem;padding:0 3rem;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x mandatory}
+.showcase-items::-webkit-scrollbar{display:none}
+.showcase-item{flex:0 0 calc(50% - .75rem);height:70vh;border-radius:4px;overflow:hidden;position:relative;background:#0a0a12;border:1px solid rgba(255,255,255,.06);scroll-snap-align:start;transition:border-color .4s;cursor:none}
+.showcase-item:hover{border-color:rgba(255,255,255,.15)}
+.showcase-bg{position:absolute;inset:0;transition:transform .6s cubic-bezier(.16,1,.3,1)}
+.showcase-item:hover .showcase-bg{transform:scale(1.04)}
+.showcase-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,5,8,.9) 0%,transparent 50%)}
+.showcase-info{position:absolute;bottom:2.5rem;left:2.5rem;right:2.5rem}
+.showcase-tag{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:.6rem}
+.showcase-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.6rem}
+.showcase-num{position:absolute;top:2rem;right:2rem;font-family:'Syne',sans-serif;font-size:.75rem;color:rgba(255,255,255,.2)}
+.sg1{background:linear-gradient(135deg,#0a0a1a 0%,#0d1a2a 50%,#0a0f1a 100%)}
+.sg2{background:linear-gradient(135deg,#1a0a0a 0%,#1a0d0a 50%,#100808 100%)}
+.sg3{background:linear-gradient(135deg,#0a1a0a 0%,#0a1a10 50%,#080f08 100%)}
+.sg4{background:linear-gradient(135deg,#1a0a1a 0%,#150a1a 50%,#0f080f 100%)}
+#stats{padding:8rem 3rem;min-height:60vh;display:flex;align-items:center}
+.stats-inner{max-width:1200px;margin:0 auto;width:100%}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;border-top:1px solid rgba(255,255,255,.06);padding-top:4rem}
+.big-stat-num{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(3rem,6vw,6rem);letter-spacing:-.03em;line-height:1}
+.big-stat-label{font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:.8rem}
+#cta{min-height:80vh;display:flex;align-items:center;justify-content:flex-start;text-align:left;padding:8rem 3rem;position:relative;overflow:hidden}
+.cta-inner{max-width:900px;position:relative;z-index:2;width:100%}
+.cta-label{font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:2rem}
+.cta-title{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(3rem,8vw,7rem);line-height:.93;text-transform:uppercase;letter-spacing:-.02em;margin-bottom:3rem}
+.cta-btn{display:inline-flex;align-items:center;gap:.8rem;font-family:'Syne',sans-serif;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:#050508;background:#fff;padding:1.1rem 3rem;border-radius:3rem;text-decoration:none;transition:all .3s;cursor:none}
+.cta-btn:hover{background:rgba(255,255,255,.9);transform:scale(1.03)}
+.cta-sub{font-size:.85rem;color:rgba(255,255,255,.3);margin-top:2rem}
+footer{padding:3rem;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;z-index:10;position:relative}
+.footer-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:.9rem;letter-spacing:.2em;text-transform:uppercase;opacity:.5}
+.footer-copy{font-size:.75rem;color:rgba(255,255,255,.25)}
+.grain{position:fixed;inset:0;z-index:500;pointer-events:none;opacity:.035}
+.grain canvas{position:absolute;inset:0;width:100%;height:100%}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+@media(max-width:900px){
+nav{padding:1.2rem 1.5rem}
+.nav-menu{display:none}
+.nav-cta{font-size:.65rem;padding:.4rem .9rem}
+#hero{padding:0 1.5rem;align-items:flex-end;padding-bottom:10vh}
+.hero-title{font-size:clamp(2.8rem,14vw,5rem)}
+.hero-sub{font-size:.85rem;margin-top:1.2rem}
+.hero-btn{margin-top:1.8rem;font-size:.68rem;padding:.7rem 1.5rem}
+#particle-rocket{padding:0 1.5rem;align-items:flex-end;padding-bottom:8vh}
+#particle-rocket h2{font-size:clamp(2.8rem,14vw,5rem) !important}
+#particle-rocket p:first-child{font-size:.6rem !important}
+#particle-rocket p:last-child{font-size:.82rem !important;margin-top:1rem !important}
+#particle-satellite{padding:0 1.5rem 6vh;justify-content:flex-start !important;align-items:flex-end}
+#particle-satellite h2{font-size:clamp(3rem,18vw,6rem) !important;text-align:left !important}
+.about-grid{grid-template-columns:1fr;gap:2rem}
+.about-visual{display:none}
+.about-title{font-size:clamp(1.8rem,6vw,2.5rem)}
+.services-grid{grid-template-columns:1fr}
+.service-card{padding:2rem}
+.stats-row{grid-template-columns:1fr 1fr;gap:1.5rem}
+.big-stat-num{font-size:clamp(2.2rem,8vw,4rem)}
+.showcase-item{flex:0 0 calc(88% - .75rem);height:55vh}
+#stats,#about,#services,#cta{padding:4rem 1.5rem}
+#cta{padding:5rem 1.5rem}
+.cta-title{font-size:clamp(2.2rem,11vw,4rem)}
+.section-header{flex-direction:column;align-items:flex-start;gap:1rem}
+.section-counter{font-size:3.5rem}
+footer{flex-direction:column;gap:1rem;text-align:center;padding:2rem 1.5rem}
+.hero-scroll{display:none}
+}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div class="grain"><canvas id="grainCanvas"></canvas></div>
+<canvas id="bg"></canvas>
+<nav>
+<div class="nav-logo">VOIDLAB</div>
+<ul class="nav-menu">
+<li><a href="#about">Studio</a></li>
+<li><a href="#services">Work</a></li>
+<li><a href="#showcase">Projects</a></li>
+<li><a href="#cta">Contact</a></li>
+</ul>
+<a href="#cta" class="nav-cta">Start a project</a>
+</nav>
+<section id="hero">
+<div class="hero-content">
+<p class="hero-eyebrow">Digital Experience Studio — Est. 2019</p>
+<h1 class="hero-title">
+<span>BOOST</span>
+<span>YOUR</span>
+<span>BRAND</span>
+</h1>
+<p class="hero-sub">Next-gen digital experiences powered by strategy, motion and immersive design.</p>
+<a href="#services" class="hero-btn">Explore our work <span class="arrow"></span></a>
+</div>
+<div class="hero-scroll">
+<div class="hero-scroll-line"></div>
+<span class="hero-scroll-label">Scroll</span>
+</div>
+</section>
+
+<!-- Particle shape reveal section 1: Rocket -->
+<section id="particle-rocket" style="height:100vh;display:flex;align-items:center;padding:0 3rem;position:relative;z-index:10;pointer-events:none;">
+<div style="pointer-events:all;max-width:500px;">
+<p style="font-size:.7rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:1.5rem;">Digital Experience Studio — Est. 2019</p>
+<h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(3.5rem,8vw,7rem);line-height:.93;text-transform:uppercase;letter-spacing:-.02em;" class="reveal">BOOST<br>YOUR<br>BRAND</h2>
+<p style="font-size:1rem;line-height:1.7;color:rgba(255,255,255,.45);max-width:420px;margin-top:1.8rem;" class="reveal">We create <strong>digital experience</strong> at the intersection between <strong>design</strong> and technology.</p>
+</div>
+</section>
+
+<!-- Particle shape reveal section 2: Satellite / AGENCY -->
+<section id="particle-satellite" style="height:100vh;display:flex;align-items:flex-end;justify-content:flex-end;padding:0 3rem 4rem;position:relative;z-index:10;pointer-events:none;">
+<div style="pointer-events:all;text-align:right;">
+<h2 style="font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(4rem,10vw,8rem);line-height:.93;text-transform:uppercase;letter-spacing:-.02em;" class="reveal">AGENCY</h2>
+</div>
+</section>
+
+<section id="about">
+<div class="about-grid">
+<div>
+<p class="about-label reveal">001 — Studio</p>
+<h2 class="about-title reveal">We craft digital matter into cinematic experiences</h2>
+<p class="about-text reveal">At the intersection of technology and artistry, we build experiences that don't just communicate—they resonate. We blend motion, interaction, and narrative into cohesive digital worlds.</p>
+<div class="about-stats reveal">
+<div><div class="stat-num" data-target="120">0</div><div class="stat-label">Projects delivered</div></div>
+<div><div class="stat-num" data-target="47">0</div><div class="stat-label">Awards won</div></div>
+<div><div class="stat-num" data-target="98">0</div><div class="stat-label">Client satisfaction</div></div>
+<div><div class="stat-num" data-target="6">0</div><div class="stat-label">Years crafting</div></div>
+</div>
+</div>
+<div class="about-visual reveal" id="miniParticle"></div>
+</div>
+</section>
+
+<section id="services">
+<div class="section-header">
+<div>
+<p class="section-label reveal">002 — Services</p>
+<h2 class="section-title reveal">What we<br>create</h2>
+</div>
+<div class="section-counter reveal">02</div>
+</div>
+<div class="services-grid reveal">
+<div class="service-card">
+<div class="service-num">01</div>
+<div class="service-name">Branding</div>
+<div class="service-desc">Identity systems, visual language and brand narratives that transcend time.</div>
+<div class="service-arrow"><svg viewBox="0 0 12 12"><line x1="0" y1="12" x2="12" y2="0" stroke-width="1.5"/><polyline points="5,0 12,0 12,7" stroke-width="1.5"/></svg></div>
+</div>
+<div class="service-card">
+<div class="service-num">02</div>
+<div class="service-name">Motion Design</div>
+<div class="service-desc">Cinematic animation systems and micro-interactions that breathe life into interfaces.</div>
+<div class="service-arrow"><svg viewBox="0 0 12 12"><line x1="0" y1="12" x2="12" y2="0" stroke-width="1.5"/><polyline points="5,0 12,0 12,7" stroke-width="1.5"/></svg></div>
+</div>
+<div class="service-card">
+<div class="service-num">03</div>
+<div class="service-name">Web Experience</div>
+<div class="service-desc">Immersive digital environments built with cutting-edge WebGL and interaction technology.</div>
+<div class="service-arrow"><svg viewBox="0 0 12 12"><line x1="0" y1="12" x2="12" y2="0" stroke-width="1.5"/><polyline points="5,0 12,0 12,7" stroke-width="1.5"/></svg></div>
+</div>
+<div class="service-card">
+<div class="service-num">04</div>
+<div class="service-name">Creative Dev</div>
+<div class="service-desc">Technical artistry at the boundary of engineering and creative direction.</div>
+<div class="service-arrow"><svg viewBox="0 0 12 12"><line x1="0" y1="12" x2="12" y2="0" stroke-width="1.5"/><polyline points="5,0 12,0 12,7" stroke-width="1.5"/></svg></div>
+</div>
+<div class="service-card">
+<div class="service-num">05</div>
+<div class="service-name">3D Design</div>
+<div class="service-desc">Sculptural digital objects and spatial compositions that command attention.</div>
+<div class="service-arrow"><svg viewBox="0 0 12 12"><line x1="0" y1="12" x2="12" y2="0" stroke-width="1.5"/><polyline points="5,0 12,0 12,7" stroke-width="1.5"/></svg></div>
+</div>
+<div class="service-card">
+<div class="service-num">06</div>
+<div class="service-name">Strategy</div>
+<div class="service-desc">Deep brand thinking and creative direction that aligns vision with impact.</div>
+<div class="service-arrow"><svg viewBox="0 0 12 12"><line x1="0" y1="12" x2="12" y2="0" stroke-width="1.5"/><polyline points="5,0 12,0 12,7" stroke-width="1.5"/></svg></div>
+</div>
+</div>
+</section>
+
+<section id="showcase">
+<div class="showcase-header">
+<p class="section-label reveal">003 — Selected Work</p>
+<h2 class="section-title reveal">Recent<br>projects</h2>
+</div>
+<div class="showcase-items">
+<div class="showcase-item">
+<div class="showcase-bg sg1" id="sc1"></div>
+<div class="showcase-overlay"></div>
+<div class="showcase-info">
+<div class="showcase-tag">Branding — Motion</div>
+<div class="showcase-title">Nexus Identity System</div>
+</div>
+<div class="showcase-num">01/04</div>
+</div>
+<div class="showcase-item">
+<div class="showcase-bg sg2" id="sc2"></div>
+<div class="showcase-overlay"></div>
+<div class="showcase-info">
+<div class="showcase-tag">Web Experience — 3D</div>
+<div class="showcase-title">Helio Immersive Platform</div>
+</div>
+<div class="showcase-num">02/04</div>
+</div>
+<div class="showcase-item">
+<div class="showcase-bg sg3" id="sc3"></div>
+<div class="showcase-overlay"></div>
+<div class="showcase-info">
+<div class="showcase-tag">Creative Dev — Film</div>
+<div class="showcase-title">Orbit Campaign</div>
+</div>
+<div class="showcase-num">03/04</div>
+</div>
+<div class="showcase-item">
+<div class="showcase-bg sg4" id="sc4"></div>
+<div class="showcase-overlay"></div>
+<div class="showcase-info">
+<div class="showcase-tag">Strategy — Brand</div>
+<div class="showcase-title">Solace Visual Language</div>
+</div>
+<div class="showcase-num">04/04</div>
+</div>
+</div>
+</section>
+
+<section id="stats">
+<div class="stats-inner">
+<p class="section-label reveal">004 — By the numbers</p>
+<div class="stats-row">
+<div class="reveal">
+<div class="big-stat-num" data-target="2.4" data-dec="1">0</div>
+<div class="big-stat-label">Billion in client revenue influenced</div>
+</div>
+<div class="reveal">
+<div class="big-stat-num" data-target="120" data-suffix="+">0</div>
+<div class="big-stat-label">Global projects delivered</div>
+</div>
+<div class="reveal">
+<div class="big-stat-num" data-target="47">0</div>
+<div class="big-stat-label">International awards</div>
+</div>
+<div class="reveal">
+<div class="big-stat-num" data-target="98" data-suffix="%">0</div>
+<div class="big-stat-label">Satisfaction rate</div>
+</div>
+</div>
+</div>
+</section>
+
+<section id="cta">
+<div class="cta-inner">
+<p class="cta-label reveal">005 — Let's create</p>
+<h2 class="cta-title reveal">Ready to create something extraordinary?</h2>
+<a href="#" class="cta-btn reveal">Begin your project <span class="arrow" style="display:inline-block;width:16px;height:16px;border-top:1.5px solid #050508;border-right:1.5px solid #050508;transform:rotate(45deg)"></span></a>
+<p class="cta-sub reveal">Selected clients only — studio@voidlab.io</p>
+</div>
+</section>
+
+<footer>
+<div class="footer-logo">VOIDLAB®</div>
+<div class="footer-copy">© 2026 Voidlab. All rights reserved.</div>
+</footer>
+
+<script>
+// ─── CURSOR ───────────────────────────────────────────────────
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+mx=e.clientX; my=e.clientY;
+cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+});
+(function animCursor(){
+rx+=(mx-rx)*.12; ry+=(my-ry)*.12;
+cursorRing.style.left=rx+'px'; cursorRing.style.top=ry+'px';
+requestAnimationFrame(animCursor);
+})();
+document.querySelectorAll('a,button,.service-card,.showcase-item').forEach(el=>{
+el.addEventListener('mouseenter',()=>{cursor.style.transform='translate(-50%,-50%) scale(2.5)';cursorRing.style.transform='translate(-50%,-50%) scale(1.5)';});
+el.addEventListener('mouseleave',()=>{cursor.style.transform='translate(-50%,-50%) scale(1)';cursorRing.style.transform='translate(-50%,-50%) scale(1)';});
+});
+
+// ─── GRAIN ────────────────────────────────────────────────────
+const gc=document.getElementById('grainCanvas');
+const gctx=gc.getContext('2d');
+let gFrame=0;
+function grainResize(){gc.width=window.innerWidth;gc.height=window.innerHeight;}
+grainResize();
+window.addEventListener('resize',grainResize);
+function animGrain(){
+gFrame++;
+if(gFrame%3===0){
+const id=gctx.createImageData(gc.width,gc.height);
+const d=id.data;
+for(let i=0;i<d.length;i+=4){const v=Math.random()*255;d[i]=v;d[i+1]=v;d[i+2]=v;d[i+3]=180;}
+gctx.putImageData(id,0,0);
+  }
+requestAnimationFrame(animGrain);
+}
+animGrain();
+
+// ─── MAIN WebGL PARTICLE SYSTEM ───────────────────────────────
+const canvas = document.getElementById('bg');
+const gl = canvas.getContext('webgl2')||canvas.getContext('webgl');
+let W,H;
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+resize();
+window.addEventListener('resize',()=>{resize();gl.viewport(0,0,W,H);});
+
+const N = Math.min(90000, window.innerWidth<768?25000:70000);
+
+// Vertex shader
+const VS = `
+attribute vec3 aPos;
+attribute float aSeed;
+attribute vec3 aTarget1;
+attribute vec3 aTarget2;
+uniform float uTime;
+uniform vec2 uMouse;
+uniform float uScroll;
+uniform float uAspect;
+uniform float uDPR;
+uniform float uMorph1;
+uniform float uMorph2;
+varying float vBright;
+varying vec3 vColor;
+varying float vSize;
+
+float hash(float n){return fract(sin(n)*43758.5453123);}
+float noise(vec3 x){
+  vec3 f=fract(x);vec3 i=floor(x);
+  f=f*f*(3.0-2.0*f);
+  float n2=i.x+i.y*57.0+113.0*i.z;
+  return mix(mix(mix(hash(n2+0.0),hash(n2+1.0),f.x),
+                 mix(hash(n2+57.0),hash(n2+58.0),f.x),f.y),
+             mix(mix(hash(n2+113.0),hash(n2+114.0),f.x),
+                 mix(hash(n2+170.0),hash(n2+171.0),f.x),f.y),f.z);
+}
+vec3 curl(vec3 p){
+  float e=0.1;
+  vec3 dx=vec3(e,0,0),dy=vec3(0,e,0),dz=vec3(0,0,e);
+  float px=noise(p+dx)-noise(p-dx);
+  float py=noise(p+dy)-noise(p-dy);
+  float pz=noise(p+dz)-noise(p-dz);
+  return normalize(vec3(py-pz,pz-px,px-py));
+}
+
+void main(){
+  float t2=uTime*0.08;
+  vec3 p=aPos;
+  float curlAmt = 1.0 - max(uMorph1, uMorph2)*0.88;
+  vec3 curl1=curl(p*1.2+t2*0.3+aSeed);
+  vec3 curl2=curl(p*2.5-t2*0.2+aSeed*2.0);
+  p+=curl1*0.15*curlAmt+curl2*0.06*curlAmt;
+
+  float spin=uTime*0.045*(1.0-max(uMorph1,uMorph2)*0.75);
+  float cs=cos(spin+aSeed*0.5),sn=sin(spin+aSeed*0.5);
+  p.xy=vec2(p.x*cs-p.y*sn,p.x*sn+p.y*cs);
+  p.z+=sin(uTime*0.12+aSeed*3.14)*0.13*curlAmt;
+
+  vec3 t1=aTarget1;
+  vec3 t2pos=aTarget2;
+
+  float sr=uTime*0.11;
+  float csr=cos(sr),snr=sin(sr);
+  t1.xz=vec2(t1.x*csr-t1.z*snr, t1.x*snr+t1.z*csr);
+
+  float sr2=uTime*0.09;
+  float csr2=cos(sr2),snr2=sin(sr2);
+  t2pos.xz=vec2(t2pos.x*csr2-t2pos.z*snr2, t2pos.x*snr2+t2pos.z*csr2);
+
+  p=mix(p, t1, uMorph1);
+  p=mix(p, t2pos, uMorph2);
+
+  float jitter=1.0-max(uMorph1,uMorph2)*0.92;
+  p+=vec3(sin(uTime*0.2+aSeed*2.1),cos(uTime*0.17+aSeed*3.7),sin(uTime*0.13+aSeed*5.2))*0.032*jitter;
+
+  vec2 mNorm=uMouse*2.0-1.0;
+  mNorm.x*=uAspect;
+  float md=length(p.xy-mNorm*1.25);
+  float mf=exp(-md*md*1.7);
+  p.xy+=normalize(p.xy-mNorm*1.25+0.001)*mf*0.11*(1.0-max(uMorph1,uMorph2)*0.75);
+
+  float satShift = uMorph2 * 0.28 * uAspect;
+  vec4 pos=vec4((p.x + satShift)/uAspect,p.y,p.z*0.48,1.0);
+  float depth=(p.z+2.2)/4.2;
+  float sz=(0.55+hash(aSeed)*1.4)*(0.45+depth*0.75);
+  sz*=uDPR;
+
+  float ci=hash(aSeed*3.7);
+  float morphBlend=max(uMorph1,uMorph2);
+
+  // Improved coloring based on photos
+  if(uMorph2>0.05){
+    // Satellite coloring - Blue panel + Gold panel
+    float satZone = aTarget2.z;
+    if(satZone < -0.2){
+      vColor = mix(vec3(0.2,0.45,0.95), vec3(0.35,0.65,1.0), hash(aSeed));
+    } else if(satZone > 0.2){
+      vColor = mix(vec3(0.95,0.65,0.25), vec3(1.0,0.8,0.4), hash(aSeed*2.0));
+    } else {
+      vColor = mix(vec3(0.75,0.78,0.85), vec3(0.9,0.85,0.7), hash(aSeed*3.0));
+    }
+    vColor = mix(vec3(0.4,0.6,1.0), vColor, uMorph2);
+  } else if(uMorph1>0.05){
+    // Rocket coloring - Gold body + Blue accents + Orange exhaust
+    float ry = aTarget1.y;
+    float rx = aTarget1.x;
+    if(ry < -0.65){
+      vColor = mix(vec3(1.0,0.5,0.1), vec3(1.0,0.75,0.3), hash(aSeed*2.0)); // exhaust
+    } else if(rx > 0.15 || rx < -0.1){
+      vColor = mix(vec3(0.25,0.55,1.0), vec3(0.4,0.7,1.0), hash(aSeed)); // blue highlights
+    } else {
+      vColor = mix(vec3(0.9,0.65,0.25), vec3(1.0,0.82,0.35), hash(aSeed*3.0)); // gold body
+    }
+    vColor = mix(vec3(0.6,0.5,0.3), vColor, uMorph1);
+  } else {
+    // Normal galaxy
+    if(ci<0.35) vColor=mix(vec3(0.3,0.55,1.0),vec3(0.5,0.8,1.0),hash(aSeed));
+    else if(ci<0.6) vColor=mix(vec3(1.0,0.6,0.2),vec3(1.0,0.85,0.4),hash(aSeed*2.0));
+    else vColor=vec3(0.85,0.9,1.0);
+  }
+
+  float noiseB=noise(p*3.0+uTime*0.1);
+  vBright=(0.35+depth*0.65)*(0.65+mf*1.0)*(0.55+noiseB*0.45);
+  vBright*=(0.85+hash(aSeed*7.3)*0.35)*(1.0+morphBlend*0.75);
+  vSize=sz;
+  gl_Position=pos;
+  gl_PointSize=clamp(sz*(1.0+morphBlend*0.35),0.6,8.0);
+}`;
+const FS = `
+precision mediump float;
+varying float vBright;
+varying vec3 vColor;
+varying float vSize;
+void main(){
+  vec2 uv=gl_PointCoord*2.0-1.0;
+  float d=length(uv);
+  if(d>1.0)discard;
+  float core=exp(-d*d*2.8);
+  float glow=exp(-d*d*0.75);
+  float alpha=(core*0.95 + glow*0.35)*vBright;
+  gl_FragColor=vec4(vColor*alpha, alpha*0.9);
+}`;
+
+// Compile shaders and setup (same as before)
+function compileShader(type,src){
+const s=gl.createShader(type);
+gl.shaderSource(s,src);gl.compileShader(s);
+if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.warn(gl.getShaderInfoLog(s));}
+return s;
+}
+const prog=gl.createProgram();
+gl.attachShader(prog,compileShader(gl.VERTEX_SHADER,VS));
+gl.attachShader(prog,compileShader(gl.FRAGMENT_SHADER,FS));
+gl.linkProgram(prog);
+gl.useProgram(prog);
+
+// ─── IMPROVED SHAPE GENERATORS ────────────────────────────────────────
+function genRocket(n){
+  const tilt = Math.PI * 0.32; // ~35-40 degrees angle as in photo
+  const cosT = Math.cos(tilt), sinT = Math.sin(tilt);
+  function rot(x, y, z){
+    return [x*cosT - y*sinT, x*sinT + y*cosT, z];
+  }
+  const pts = [];
+  const rng = () => Math.random();
+  for(let i = 0; i < n; i++){
+    const r = rng();
+    if(r < 0.22){ 
+      // Nose cone - rounded
+      const t = rng();
+      const a = rng() * Math.PI * 2;
+      const rad = 0.11 * (1 - t) * (1 - t * 0.4);
+      const h = 0.55 + t * 0.48;
+      const x = Math.cos(a) * rad + (rng()-0.5)*0.018;
+      const y = h;
+      const z = Math.sin(a) * rad * 0.9 + (rng()-0.5)*0.018;
+      const p = rot(x, y, z);
+      pts.push([p[0]*0.85, p[1]*0.85, p[2]*0.85]);
+    } else if(r < 0.65){ 
+      // Main cylindrical body
+      const a = rng() * Math.PI * 2;
+      const h = (rng() - 0.5) * 1.1;
+      const rad = 0.115 + rng() * 0.022;
+      const x = Math.cos(a) * rad + (rng()-0.5)*0.02;
+      const y = h;
+      const z = Math.sin(a) * rad * 0.88 + (rng()-0.5)*0.02;
+      const p = rot(x, y, z);
+      pts.push([p[0]*0.85, p[1]*0.85, p[2]*0.85]);
+    } else if(r < 0.82){ 
+      // Exhaust nozzle + bell
+      const t = rng();
+      const a = rng() * Math.PI * 2;
+      const rad = 0.115 + t * 0.24;
+      const h = -0.55 - t * 0.34;
+      const x = Math.cos(a) * rad + (rng()-0.5)*0.025;
+      const y = h;
+      const z = Math.sin(a) * rad * 0.9 + (rng()-0.5)*0.025;
+      const p = rot(x, y, z);
+      pts.push([p[0]*0.85, p[1]*0.85, p[2]*0.85]);
+    } else if(r < 0.93){ 
+      // Exhaust plume
+      const t = rng();
+      const a = rng() * Math.PI * 2;
+      const rad = (0.12 + t*0.32) * (0.8 + rng()*0.7);
+      const h = -0.85 - t*0.45 - rng()*0.15;
+      const x = Math.cos(a) * rad * (1 + t*0.45);
+      const y = h;
+      const z = Math.sin(a) * rad * 0.85;
+      const p = rot(x, y, z);
+      pts.push([p[0]*0.85, p[1]*0.85, p[2]*0.85]);
+    } else { 
+      // Fins at base
+      const finIdx = Math.floor(rng() * 4);
+      const fa = finIdx * (Math.PI * 2 / 4);
+      const ft = rng();
+      const finH = -0.42 - ft * 0.22;
+      const finW = 0.14 + ft * 0.19;
+      const x = Math.cos(fa) * finW + (rng()-0.5)*0.02;
+      const y = finH;
+      const z = Math.sin(fa) * finW * 0.75;
+      const p = rot(x, y, z);
+      pts.push([p[0]*0.85, p[1]*0.85, p[2]*0.85]);
+    }
+  }
+  return pts;
+}
+
+function genSatellite(n){
+  // Tilt the whole satellite ~20 deg
+  const tilt = -Math.PI * 0.18;
+  const cosT = Math.cos(tilt), sinT = Math.sin(tilt);
+  function rot(x,y,z){ return [x*cosT - y*sinT, x*sinT + y*cosT, z]; }
+
+  const pts = [];
+  const rng = () => Math.random();
+
+  // Panel dimensions
+  const panelW = 0.85;  // half-width of each panel along X
+  const panelH = 0.62;  // half-height along Y
+  const bodyW  = 0.13;
+  const bodyH  = 0.10;
+  const bodyD  = 0.08;
+  // Grid cells: 3 cols x 4 rows per panel
+  const COLS = 3, ROWS = 4;
+  const cellW = panelW / COLS;
+  const cellH = (panelH * 2) / ROWS;
+  const lineThk = 0.008; // grid line half-thickness
+
+  for(let i = 0; i < n; i++){
+    const r = rng();
+
+    if(r < 0.16){
+      // ── Central body: surface-only box ──
+      const face = Math.floor(rng()*6);
+      let fx, fy, fz;
+      if(face===0){ fx= bodyW; fy=(rng()-0.5)*bodyH*2; fz=(rng()-0.5)*bodyD*2; }
+      else if(face===1){ fx=-bodyW; fy=(rng()-0.5)*bodyH*2; fz=(rng()-0.5)*bodyD*2; }
+      else if(face===2){ fx=(rng()-0.5)*bodyW*2; fy= bodyH; fz=(rng()-0.5)*bodyD*2; }
+      else if(face===3){ fx=(rng()-0.5)*bodyW*2; fy=-bodyH; fz=(rng()-0.5)*bodyD*2; }
+      else if(face===4){ fx=(rng()-0.5)*bodyW*2; fy=(rng()-0.5)*bodyH*2; fz= bodyD; }
+      else             { fx=(rng()-0.5)*bodyW*2; fy=(rng()-0.5)*bodyH*2; fz=-bodyD; }
+      const p = rot(fx, fy, fz);
+      pts.push([p[0], p[1], p[2]]);
+
+    } else if(r < 0.16 + 0.005){
+      // ── Short connecting arm left ──
+      const p = rot(-bodyW - rng()*0.10, (rng()-0.5)*0.03, (rng()-0.5)*0.015);
+      pts.push([p[0], p[1], p[2]]);
+
+    } else if(r < 0.16 + 0.01){
+      // ── Short connecting arm right ──
+      const p = rot(bodyW + rng()*0.10, (rng()-0.5)*0.03, (rng()-0.5)*0.015);
+      pts.push([p[0], p[1], p[2]]);
+
+    } else if(r < 0.575){
+      // ── Left solar panel (blue, pz < 0) ──
+      // Fill cell interiors densely, grid lines brighter
+      const col = Math.floor(rng() * COLS);
+      const row = Math.floor(rng() * ROWS);
+      const isGridLine = rng() < 0.18;
+
+      let lx, ly;
+      if(isGridLine){
+        // On a grid line edge
+        if(rng() < 0.5){
+          // vertical line
+          lx = -bodyW - 0.07 - col * cellW + (rng()<0.5 ? lineThk*rng() : cellW - lineThk*rng());
+        } else {
+          // horizontal line
+          lx = -bodyW - 0.07 - col*cellW - rng()*cellW;
+        }
+        ly = -panelH + row*cellH + (rng()<0.5 ? lineThk*rng() : cellH - lineThk*rng());
+      } else {
+        // interior of cell (slightly inset from grid lines)
+        lx = -bodyW - 0.07 - col*cellW - lineThk - rng()*(cellW - lineThk*2);
+        ly = -panelH + row*cellH + lineThk + rng()*(cellH - lineThk*2);
+      }
+      const pz = -0.30 + (rng()-0.5)*0.04;
+      const p = rot(lx, ly, pz);
+      pts.push([p[0], p[1], p[2]]);
+
+    } else if(r < 0.97){
+      // ── Right solar panel (gold, pz > 0) ──
+      const col = Math.floor(rng() * COLS);
+      const row = Math.floor(rng() * ROWS);
+      const isGridLine = rng() < 0.18;
+
+      let lx, ly;
+      if(isGridLine){
+        if(rng() < 0.5){
+          lx = bodyW + 0.07 + col*cellW + (rng()<0.5 ? lineThk*rng() : cellW - lineThk*rng());
+        } else {
+          lx = bodyW + 0.07 + col*cellW + rng()*cellW;
+        }
+        ly = -panelH + row*cellH + (rng()<0.5 ? lineThk*rng() : cellH - lineThk*rng());
+      } else {
+        lx = bodyW + 0.07 + col*cellW + lineThk + rng()*(cellW - lineThk*2);
+        ly = -panelH + row*cellH + lineThk + rng()*(cellH - lineThk*2);
+      }
+      const pz = 0.30 + (rng()-0.5)*0.04;
+      const p = rot(lx, ly, pz);
+      pts.push([p[0], p[1], p[2]]);
+
+    } else {
+      // ── Antenna / dish detail ──
+      const a = rng()*Math.PI*2;
+      const r2 = rng()*0.07;
+      const p = rot(Math.cos(a)*r2, bodyH + 0.04 + rng()*0.12, Math.sin(a)*r2*0.6);
+      pts.push([p[0], p[1], p[2]]);
+    }
+  }
+  return pts;
+}
+
+// Generate particles
+const pos = new Float32Array(N*3);
+const seeds = new Float32Array(N);
+const target1 = new Float32Array(N*3);
+const target2 = new Float32Array(N*3);
+
+const rocketPts = genRocket(N);
+const satPts = genSatellite(N);
+
+for(let i=0; i<N; i++){
+  const phi = Math.acos(2*Math.random()-1);
+  const theta = Math.random()*Math.PI*2;
+  const r = Math.pow(Math.random(),0.58)*1.85;
+  const px = Math.sin(phi)*Math.cos(theta)*r * 0.95;
+  const py = Math.sin(phi)*Math.sin(theta)*r * 0.6;
+  const pz = Math.cos(phi)*r*0.55;
+  pos[i*3]   = px + (Math.random()-0.5)*0.25;
+  pos[i*3+1] = py + (Math.random()-0.5)*0.25;
+  pos[i*3+2] = pz + (Math.random()-0.5)*0.4;
+
+  seeds[i] = Math.random();
+
+  target1[i*3]   = rocketPts[i][0];
+  target1[i*3+1] = rocketPts[i][1];
+  target1[i*3+2] = rocketPts[i][2];
+
+  target2[i*3]   = satPts[i][0];
+  target2[i*3+1] = satPts[i][1];
+  target2[i*3+2] = satPts[i][2];
+}
+
+// Buffer setup (unchanged from original, but using new shapes)
+const posBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+gl.bufferData(gl.ARRAY_BUFFER, pos, gl.STATIC_DRAW);
+const aPos = gl.getAttribLocation(prog, 'aPos');
+gl.enableVertexAttribArray(aPos);
+gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+
+const seedBuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, seedBuf);
+gl.bufferData(gl.ARRAY_BUFFER, seeds, gl.STATIC_DRAW);
+const aSeed = gl.getAttribLocation(prog, 'aSeed');
+gl.enableVertexAttribArray(aSeed);
+gl.vertexAttribPointer(aSeed, 1, gl.FLOAT, false, 0, 0);
+
+const t1Buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, t1Buf);
+gl.bufferData(gl.ARRAY_BUFFER, target1, gl.STATIC_DRAW);
+const aTarget1 = gl.getAttribLocation(prog, 'aTarget1');
+gl.enableVertexAttribArray(aTarget1);
+gl.vertexAttribPointer(aTarget1, 3, gl.FLOAT, false, 0, 0);
+
+const t2Buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, t2Buf);
+gl.bufferData(gl.ARRAY_BUFFER, target2, gl.STATIC_DRAW);
+const aTarget2 = gl.getAttribLocation(prog, 'aTarget2');
+gl.enableVertexAttribArray(aTarget2);
+gl.vertexAttribPointer(aTarget2, 3, gl.FLOAT, false, 0, 0);
+
+const uTime = gl.getUniformLocation(prog, 'uTime');
+const uMouse = gl.getUniformLocation(prog, 'uMouse');
+const uScroll = gl.getUniformLocation(prog, 'uScroll');
+const uAspect = gl.getUniformLocation(prog, 'uAspect');
+const uDPR = gl.getUniformLocation(prog, 'uDPR');
+const uMorph1 = gl.getUniformLocation(prog, 'uMorph1');
+const uMorph2 = gl.getUniformLocation(prog, 'uMorph2');
+
+gl.enable(gl.BLEND);
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+let mouseX = 0.5, mouseY = 0.5, targetMX = 0.5, targetMY = 0.5;
+let scrollY = 0, scrollTarget = 0;
+let morph1 = 0, morph2 = 0, targetMorph1 = 0, targetMorph2 = 0;
+
+document.addEventListener('mousemove', e => {
+  targetMX = e.clientX / window.innerWidth;
+  targetMY = 1 - e.clientY / window.innerHeight;
+});
+
+window.addEventListener('scroll', () => {
+  const s = window.scrollY / window.innerHeight;
+  scrollTarget = window.scrollY / window.innerHeight;
+  targetMorph1 = Math.max(0, Math.min(1, (s - 0.5) / 0.55)) * Math.max(0, Math.min(1, (1.85 - s) / 0.6));
+  targetMorph2 = Math.max(0, Math.min(1, (s - 2.55) / 0.55)) * Math.max(0, Math.min(1, (4.1 - s) / 0.7));
+});
+
+const dpr = Math.min(window.devicePixelRatio, 2);
+let t0 = null;
+
+function render(ts){
+  if(!t0) t0 = ts;
+  const t = (ts - t0)/1000;
+  mouseX += (targetMX - mouseX) * 0.055;
+  mouseY += (targetMY - mouseY) * 0.055;
+  scrollY += (scrollTarget - scrollY) * 0.065;
+  morph1 += (targetMorph1 - morph1) * 0.045;
+  morph2 += (targetMorph2 - morph2) * 0.045;
+
+  gl.viewport(0,0,W,H);
+  gl.clearColor(0.018, 0.018, 0.028, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+  gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, seedBuf);
+  gl.vertexAttribPointer(aSeed, 1, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, t1Buf);
+  gl.vertexAttribPointer(aTarget1, 3, gl.FLOAT, false, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, t2Buf);
+  gl.vertexAttribPointer(aTarget2, 3, gl.FLOAT, false, 0, 0);
+
+  gl.uniform1f(uTime, t);
+  gl.uniform2f(uMouse, mouseX, mouseY);
+  gl.uniform1f(uScroll, scrollY);
+  gl.uniform1f(uAspect, W/H);
+  gl.uniform1f(uDPR, dpr);
+  gl.uniform1f(uMorph1, morph1);
+  gl.uniform1f(uMorph2, morph2);
+
+  gl.drawArrays(gl.POINTS, 0, N);
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+// Rest of the script (mini particle, reveals, counters etc.) remains the same
+const mc=document.createElement('canvas');
+mc.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1';
+const mp=document.getElementById('miniParticle');
+if(mp){mp.appendChild(mc);}
+const mgl=mc.getContext('webgl');
+const MN=8000;
+if(mgl){
+  mc.width=mp.offsetWidth||500;mc.height=mp.offsetHeight||450;
+  const mvs=compileShader2(mgl,'attribute vec2 a;attribute float s;uniform float t;varying vec4 c;void main(){float a2=sin(t*0.15+s*6.28)*0.5;float b=cos(t*0.12+s*4.5);float r=0.3+s*0.6;vec2 p=vec2(r*cos(s*12.56+a2),r*sin(s*9.42+b));c=vec4(mix(vec3(0.4,0.6,1.0),vec3(1.0,0.7,0.3),fract(s*7.3)),0.6+s*0.4);gl_Position=vec4(p,0.0,1.0);gl_PointSize=1.5+s*2.0;}');
+  const mfs=compileShader2(mgl,'precision mediump float;varying vec4 c;void main(){vec2 uv=gl_PointCoord*2.0-1.0;float d=length(uv);if(d>1.0)discard;gl_FragColor=vec4(c.rgb*exp(-d*d*2.0),c.a*exp(-d*d*1.5));}');
+  const mpr=mgl.createProgram();
+  mgl.attachShader(mpr,mvs);mgl.attachShader(mpr,mfs);mgl.linkProgram(mpr);mgl.useProgram(mpr);
+  const mpos=new Float32Array(MN*2),mseeds=new Float32Array(MN);
+  for(let i=0;i<MN;i++){mpos[i*2]=Math.random()*2-1;mpos[i*2+1]=Math.random()*2-1;mseeds[i]=Math.random();}
+  const mbuf=mgl.createBuffer();mgl.bindBuffer(mgl.ARRAY_BUFFER,mbuf);mgl.bufferData(mgl.ARRAY_BUFFER,mpos,mgl.STATIC_DRAW);
+  const mAtt=mgl.getAttribLocation(mpr,'a');mgl.enableVertexAttribArray(mAtt);mgl.vertexAttribPointer(mAtt,2,mgl.FLOAT,false,0,0);
+  const msbuf=mgl.createBuffer();mgl.bindBuffer(mgl.ARRAY_BUFFER,msbuf);mgl.bufferData(mgl.ARRAY_BUFFER,mseeds,mgl.STATIC_DRAW);
+  const msAtt=mgl.getAttribLocation(mpr,'s');mgl.enableVertexAttribArray(msAtt);mgl.vertexAttribPointer(msAtt,1,mgl.FLOAT,false,0,0);
+  const mtLoc=mgl.getUniformLocation(mpr,'t');
+  mgl.enable(mgl.BLEND);mgl.blendFunc(mgl.SRC_ALPHA,mgl.ONE);
+  let mt0=null;
+  function renderMini(ts){
+    if(!mt0)mt0=ts;const t2=(ts-mt0)/1000;
+    mgl.viewport(0,0,mc.width,mc.height);
+    mgl.clearColor(0.04,0.04,0.06,1);mgl.clear(mgl.COLOR_BUFFER_BIT);
+    mgl.useProgram(mpr);
+    mgl.bindBuffer(mgl.ARRAY_BUFFER,mbuf);mgl.vertexAttribPointer(mAtt,2,mgl.FLOAT,false,0,0);
+    mgl.bindBuffer(mgl.ARRAY_BUFFER,msbuf);mgl.vertexAttribPointer(msAtt,1,mgl.FLOAT,false,0,0);
+    mgl.uniform1f(mtLoc,t2);mgl.drawArrays(mgl.POINTS,0,MN);
+    requestAnimationFrame(renderMini);
+  }
+  requestAnimationFrame(renderMini);
+}
+function compileShader2(g,src){const t2=src.startsWith('attribute')?g.VERTEX_SHADER:g.FRAGMENT_SHADER;const s=g.createShader(t2);g.shaderSource(s,src);g.compileShader(s);return s;}
+
+// Service card hover, reveals, counters, smooth scroll - same as original
+document.querySelectorAll('.service-card').forEach(card=>{
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect();
+    card.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+    card.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+  });
+});
+
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(en=>{
+    if(en.isIntersecting){
+      en.target.classList.add('visible');
+      en.target.querySelectorAll('[data-target]').forEach(el=>animCount(el));
+      io.unobserve(en.target);
+    }
+  });
+},{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+setTimeout(()=>{
+  document.querySelector('.hero-eyebrow').classList.add('visible');
+  document.querySelectorAll('.hero-title span').forEach(s=>s.classList.add('visible'));
+  setTimeout(()=>{document.querySelector('.hero-sub').classList.add('visible');},200);
+  setTimeout(()=>{document.querySelector('.hero-btn').classList.add('visible');},400);
+},200);
+
+function animCount(el){
+  const target = parseFloat(el.dataset.target);
+  const dec = parseInt(el.dataset.dec||0);
+  const suffix = el.dataset.suffix||'';
+  const dur = 1800; const start = performance.now();
+  function step(now){
+    const p = Math.min((now-start)/dur,1);
+    const ease = 1-Math.pow(1-p,4);
+    const val = target*ease;
+    el.textContent = (dec>0?val.toFixed(dec):Math.round(val)) + suffix;
+    if(p<1) requestAnimationFrame(step);
+    else el.textContent = (dec>0?target.toFixed(dec):target) + suffix;
+  }
+  requestAnimationFrame(step);
+}
+
+document.querySelectorAll('[data-target]').forEach(el=>{
+  const io2 = new IntersectionObserver(entries=>{
+    if(entries[0].isIntersecting){animCount(el);io2.unobserve(el);}
+  },{threshold:.5});
+  io2.observe(el);
+});
+
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t = document.querySelector(a.getAttribute('href'));
+    if(t){e.preventDefault(); t.scrollIntoView({behavior:'smooth'});}
+  });
+});
+
+window.addEventListener('scroll',()=>{
+  const sy = window.scrollY;
+  document.querySelectorAll('.showcase-bg').forEach((bg,i)=>{
+    bg.style.transform = `scale(1.08) translateY(${(sy - bg.closest('section').offsetTop)*0.04*(i%2?-1:1)}px)`;
+  });
+});
+</script>
+</body>
+</html>
